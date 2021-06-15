@@ -1,0 +1,21 @@
+<!--Faire Appel à main-->
+{%extends 'store/main.html' %}
+<!--Faire appel ici au dossier static(css, image et autres)-->
+{%load static %}
+
+{% block content %}
+  <div class="row">
+    {% for listPro in products %}
+    <div class="col-lg-4">
+      <img class="thumbnail" src="{{ listPro.imageURL }}" alt="">
+      <div class="box-element product">
+        <h6><strong>{{ listPro.nom_pro}}</strong></h6>
+        <hr>
+        <button data-produit="{{ listPro.id }}" data-action="add" class="btn btn-outline-secondary add-btn update-cart">Add to cart</button>
+        <a href="#" class="btn btn-outline-success">Voir</a>
+        <h4 style="display: inline-block; float: right;">£{{ listPro.prix|floatformat:2}}</h4>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endblock content %}
