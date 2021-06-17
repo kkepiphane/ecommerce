@@ -49,6 +49,16 @@ class Order(models.Model):
     def __str__(self):
         return str(self.id)
 
+    # fonction permettant de payer
+    @property
+    def shipping(self):
+        shipping = False
+        elements = self.element_set.all()
+        for i in elements:
+            if i.produit.digital == False:
+                shipping = True
+        return shipping
+
     @property
     def get_cart_total(self):
         elements = self.element_set.all()
@@ -69,7 +79,7 @@ class Element(models.Model):
         Order, on_delete=models.SET_NULL, null=True, blank=True)
     quantite = models.IntegerField(default=0, null=True, blank=True)
     date_ajout = models.DateTimeField(auto_now_add=True)
-  
+
     @property
     def get_total(self):
         total = self.produit.prix * self.quantite

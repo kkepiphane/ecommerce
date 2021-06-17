@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse
+import datetime
 import json
 from .models import *
 # Create your views here.
@@ -14,7 +15,7 @@ def store(request):
         cartItems = order.get_cart_item
     else:
         items = []
-        order = {'get_cart_total': 0, 'get_cart_item': 0}
+        order = {'get_cart_total': 0, 'get_cart_item': 0, 'shipping': False}
         cartItems = order['get_cart_item']
 
     products = Produit.objects.all()
@@ -32,7 +33,7 @@ def cart(request):
         cartItems = order.get_cart_item
     else:
         items = []
-        order = {'get_cart_total': 0, 'get_cart_item': 0}
+        order = {'get_cart_total': 0, 'get_cart_item': 0, 'shipping': False}
         cartItems = order['get_cart_item']
 
     context = {'items': items, 'order': order, 'cartItems': cartItems}
@@ -48,7 +49,7 @@ def checkout(request):
         cartItems = order.get_cart_item
     else:
         items = []
-        order = {'get_cart_total': 0, 'get_cart_item': 0}
+        order = {'get_cart_total': 0, 'get_cart_item': 0, 'shipping': False}
         cartItems = order['get_cart_item']
     context = {'items': items, 'order': order, 'cartItems': cartItems}
     return render(request, 'store/checkout.html', context)
@@ -83,3 +84,30 @@ def updateItem(request):
         element.delete()
 
     return JsonResponse('Element est ajoute', safe=False)
+
+
+def processOrder(request):
+    idTransition = datetime.datetime.now().timestamp()
+    data = json.loads(request.body)
+    if request.user.is_authenticated:
+        utilisateur = request.user.utilisateur
+        order, created = Order.objects.get_or_create(
+            utilisateur=utilisateur, complete=False)
+        total = float(data['form']['total'])
+        order.id_transition = idTransition
+        if total == order.get_cart_total:
+            order.complete = True
+        order.save()
+
+        if order.shipping == True:
+            AdresseCourse.objects.create(
+                utilisateur=utilisateur,
+                order=order,
+                adresse=data['shipping']['adresse'],
+                ville=data['shipping']['ville'],
+                quartier=data['shipping']['quartier'],
+                codeEntrer=data['shipping']['zipcode'],
+            )
+    else:
+        print("Utilisateur n ' est pas connectée....!!"),
+    return JsonResponse('Payement complete', safe=False)
